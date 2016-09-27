@@ -1,0 +1,5 @@
+#ifndef _CVSparkInfo
+#define _CVSparkInfo
+#define CVSpark_VERSION_MAJOR @CVSpark_VERSION_MAJOR@
+#define CVSpark_VERSION_MINOR @CVSpark_VERSION_MINOR@
+#endif
