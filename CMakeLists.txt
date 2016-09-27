@@ -44,6 +44,10 @@ if(WIN32)
 	set(SDL2_MAIN_LIBRARY ${SDL_INSTALL_DIR}/lib/SDL2main.lib)
 	set(SDL2_LIBRARIES ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} opengl32.lib winmm.lib version.lib Imm32.lib)
 
+	file(GLOB LibFiles ${OpenCV_INSTALL_DIR}/x86/vc14/lib/*.lib)
+
+	set(OpenCV_LIBRARIES ${LibFiles})
+
 elseif(APPLE)
 	message(“OSX”)
 	set(SDL2_LIBRARY ${SDL_INSTALL_DIR}/lib/libSDL2.a)
@@ -73,3 +77,12 @@ add_executable(CVSpark ${SRC} ${INCS})
 add_dependencies(CVSpark SDL OpenCV)
 include_directories(${SDL2_INCLUDE_DIR} ${OpenCV_INCLUDE_DIR})
 target_link_libraries(CVSpark ${OpenCV_LIBRARIES} ${SDL2_LIBRARIES})
+
+file(GLOB DllFiles ${OpenCV_INSTALL_DIR}/x86/vc14/bin/*.dll)
+
+#add_custom_target(CVSpark)
+foreach(DllFile ${DllFiles})
+  add_custom_command(TARGET CVSpark POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E
+	  copy_if_different ${DllFile} $<TARGET_FILE_DIR:CVSpark>)
+endforeach()   
