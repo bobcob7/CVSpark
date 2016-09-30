@@ -42,14 +42,31 @@ int process(VideoCapture& capture) {
 	string window_name = "video | q or esc to quit";
 	cout << "press space to save a picture. q or esc to quit" << endl;
 	namedWindow(window_name, WINDOW_KEEPRATIO); //resizable window;
-	Mat frame;
+	Mat frame, greyFrame, edgeOut, finalOut;
+	int minThresh=50, blurRad=3, ratio=3;
+
+
+	namedWindow("Canny", CV_WINDOW_AUTOSIZE);
+	createTrackbar("Min Edge Threshold:", "Canny", &minThresh, 100);
+	createTrackbar("Blur Radius", "Canny", &blurRad, 6);
+	createTrackbar("Radio:", "Canny", &ratio, 10);
 
 	for (;;) {
 		capture >> frame;
 		if (frame.empty())
 			break;
 
-		imshow(window_name, frame);
+		cvtColor(frame, greyFrame, CV_BGR2GRAY);
+
+		//Reduce Noise by blurring
+		blur(greyFrame, edgeOut, Size(blurRad,blurRad));
+		Canny(edgeOut, edgeOut, minThresh, minThresh*ratio, blurRad);
+
+		finalOut = Scalar::all(0);
+		frame.copyTo(finalOut, edgeOut);
+
+		imshow(window_name, finalOut);
+
 		char key = (char)waitKey(30); //delay N millis, usually long enough to display and capture input
 
 		switch (key) {

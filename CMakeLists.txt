@@ -26,7 +26,7 @@ set(OpenCV_GIT_URL https://github.com/opencv/opencv.git)
 	#Get OpenCV
 	set(OpenCV_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/OpenCV")
 	set(OpenCV_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/OpenCV")
-	set(OpenCV_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${OpenCV_INSTALL_DIR})
+	set(OpenCV_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${OpenCV_INSTALL_DIR} -DBUILD_SHARED_LIBS=FALSE)
 	ExternalProject_Add(
 		OpenCV
 		PREFIX ${OpenCV_PREFIX}
@@ -39,7 +39,7 @@ set(OpenCV_GIT_URL https://github.com/opencv/opencv.git)
 	set(SDL2_INCLUDE_DIR ${SDL_INSTALL_DIR}/include)
 	set(OpenCV_INCLUDE_DIR ${OpenCV_INSTALL_DIR}/include)
 if(WIN32)
-	message(“WINDOWS”)
+	message(WINDOWS)
 	set(SDL2_LIBRARY ${SDL_INSTALL_DIR}/lib/SDL2.lib)
 	set(SDL2_MAIN_LIBRARY ${SDL_INSTALL_DIR}/lib/SDL2main.lib)
 	set(SDL2_LIBRARIES ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} opengl32.lib winmm.lib version.lib Imm32.lib)
@@ -49,9 +49,13 @@ if(WIN32)
 	set(OpenCV_LIBRARIES ${LibFiles})
 
 elseif(APPLE)
-	message(“OSX”)
+	message(OSX)
 	set(SDL2_LIBRARY ${SDL_INSTALL_DIR}/lib/libSDL2.a)
 	set(SDL2_LIBRARIES ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY})
+	file(GLOB LibFiles ${OpenCV_INSTALL_DIR}/lib/*.dylib)
+	set(OpenCV_LIBRARIES ${LibFiles})
+
+	
 
 elseif(LINUX)
 	INCLUDE (FindPkgConfig)
@@ -80,9 +84,22 @@ target_link_libraries(CVSpark ${OpenCV_LIBRARIES} ${SDL2_LIBRARIES})
 
 file(GLOB DllFiles ${OpenCV_INSTALL_DIR}/x86/vc14/bin/*.dll)
 
-#add_custom_target(CVSpark)
-foreach(DllFile ${DllFiles})
-  add_custom_command(TARGET CVSpark POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E
-	  copy_if_different ${DllFile} $<TARGET_FILE_DIR:CVSpark>)
-endforeach()   
+if(WIN32)
+	#add_custom_target(CVSpark)
+	foreach(DllFile ${DllFiles})
+	add_custom_command(TARGET CVSpark POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E
+		copy_if_different ${DllFile} $<TARGET_FILE_DIR:CVSpark>)
+	endforeach()
+elseif(APPLE)
+	set(RootDir $<TARGET_FILE_DIR:CVSpark>)
+	set(AppleLibDir ${RootDir}/lib/)
+	message(${AppleLibDir})
+	#add_custom_target(CVSpark)
+	foreach(LibFile ${LibFiles})
+	set(to ${TO_DIR}/${SRCFILE})
+	add_custom_command(TARGET CVSpark POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E
+		copy_if_different ${LibFile} ${RootDir}/)
+	endforeach() 
+endif() 
